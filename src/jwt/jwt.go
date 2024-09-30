@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amirnep/shop/domain/users"
-	"github.com/amirnep/shop/utils/errors"
+	"github.com/amirnep/shop/src/domain/users"
+	"github.com/amirnep/shop/src/utils/errors"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )

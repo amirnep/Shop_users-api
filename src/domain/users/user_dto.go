@@ -3,8 +3,8 @@ package users
 import (
 	"strings"
 
-	"github.com/amirnep/shop/utils/errors"
-	"github.com/amirnep/shop/validation"
+	"github.com/amirnep/shop/src/utils/errors"
+	"github.com/amirnep/shop/src/validation"
 )
 
 type User struct {

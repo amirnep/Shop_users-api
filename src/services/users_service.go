@@ -1,11 +1,11 @@
 package services
 
 import (
-	"github.com/amirnep/shop/domain/users"
-	crypto_utils "github.com/amirnep/shop/utils/cypto_utils"
+	"github.com/amirnep/shop/src/domain/users"
+	crypto_utils "github.com/amirnep/shop/src/utils/cypto_utils"
 
-	"github.com/amirnep/shop/utils/date_utils"
-	"github.com/amirnep/shop/utils/errors"
+	"github.com/amirnep/shop/src/utils/date_utils"
+	"github.com/amirnep/shop/src/utils/errors"
 )
 
 var (

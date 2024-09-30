@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/amirnep/shop/controllers/users"
-	"github.com/amirnep/shop/middlewares"
+	"github.com/amirnep/shop/src/controllers/users"
+	"github.com/amirnep/shop/src/middlewares"
 )
 
 func mapUrls() {

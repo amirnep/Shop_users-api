@@ -1,9 +1,9 @@
 package users
 
 import (
-	"github.com/amirnep/shop/datasources/mysql/users_db"
-	"github.com/amirnep/shop/logger"
-	"github.com/amirnep/shop/utils/errors"
+	"github.com/amirnep/shop/src/datasources/mysql/users_db"
+	"github.com/amirnep/shop/src/logger"
+	"github.com/amirnep/shop/src/utils/errors"
 )
 
 const (

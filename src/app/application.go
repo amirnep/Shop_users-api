@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/amirnep/shop/logger"
+	"github.com/amirnep/shop/src/logger"
 	"github.com/gin-gonic/gin"
 )
 

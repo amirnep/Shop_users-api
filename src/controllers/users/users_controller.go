@@ -5,11 +5,11 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/amirnep/shop/domain/users"
-	"github.com/amirnep/shop/jwt"
-	"github.com/amirnep/shop/services"
-	crypto_utils "github.com/amirnep/shop/utils/cypto_utils"
-	"github.com/amirnep/shop/utils/errors"
+	"github.com/amirnep/shop/src/domain/users"
+	"github.com/amirnep/shop/src/jwt"
+	"github.com/amirnep/shop/src/services"
+	crypto_utils "github.com/amirnep/shop/src/utils/cypto_utils"
+	"github.com/amirnep/shop/src/utils/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,7 +52,7 @@ func (u *usersController) Create(c *gin.Context) {
 
 	result, saveErr := services.UsersService.CreateUser(user)
 	if saveErr != nil {
-		c.JSON(saveErr.Status, saveErr)
+		c.JSON(http.StatusBadRequest,saveErr)
 		return
 	}
 	c.JSON(http.StatusCreated, result.Marshall(c.GetHeader("X-Public") == "true"))

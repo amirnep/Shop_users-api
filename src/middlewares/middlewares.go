@@ -3,7 +3,7 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/amirnep/shop/jwt"
+	"github.com/amirnep/shop/src/jwt"
 	"github.com/gin-gonic/gin"
 )
 
