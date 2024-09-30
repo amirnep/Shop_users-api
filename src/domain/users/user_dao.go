@@ -11,7 +11,7 @@ const (
 
 	queryGetUser = "SELECT id, first_name, last_name, email, role, date_created FROM users WHERE id = ?;"
 
-	queryUpdateUser = "UPDATE users SET first_name=?, last_name=?, email=? WHERE id = ?;"
+	queryUpdateUser = "UPDATE users SET first_name=?, last_name=? WHERE id = ?;"
 
 	queryDeleteUser = "DELETE FROM users WHERE id = ?;"
 
@@ -66,7 +66,7 @@ func (user *User) Update() *errors.RestErr {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(user.FirstName, user.LastName, user.Email, user.Id)
+	_, err = stmt.Exec(user.FirstName, user.LastName, user.Id)
 	if err != nil {
 		logger.Error("error when trying to update user", err)
 		return errors.NewInternalServerError("database error")

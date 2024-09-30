@@ -1,7 +1,6 @@
 package jwt
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	"github.com/amirnep/shop/domain/users"
+	"github.com/amirnep/shop/utils/errors"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
@@ -26,16 +26,16 @@ func GenerateJWT(user users.User) (string, error) {
 	return token.SignedString(privateKey)
 }
 
-func ValidateJWT(context *gin.Context) error {
+func ValidateJWT(context *gin.Context) *errors.RestErr {
 	token, err := getToken(context)
 	if err != nil {
-		return err
+		return errors.NewBadRequestError("invalid token provided")
 	}
 	_, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
 		return nil
 	}
-	return errors.New("invalid token provided")
+	return errors.NewBadRequestError("invalid token provided")
 }
 
 func getToken(context *gin.Context) (*jwt.Token, error) {
@@ -59,28 +59,41 @@ func getTokenFromRequest(context *gin.Context) string {
 	return ""
 }
 
-func ValidateAdminRoleJWT(context *gin.Context) error {
+func ValidateAdminRoleJWT(context *gin.Context) *errors.RestErr {
 	token, err := getToken(context)
 	if err != nil {
-		return err
+		return errors.NewBadRequestError("invalid admin token provided")
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	userRole := string(claims["role"].(string))
 	if ok && token.Valid && userRole == "admin" {
 		return nil
 	}
-	return errors.New("invalid admin token provided")
+	return errors.NewBadRequestError("invalid admin token provided")
 }
 
-func ValidateCustomerRoleJWT(context *gin.Context) error {
+func ValidateCustomerRoleJWT(context *gin.Context) *errors.RestErr {
 	token, err := getToken(context)
 	if err != nil {
-		return err
+		return errors.NewBadRequestError("invalid author token provided")
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	userRole := string(claims["role"].(string))
 	if ok && token.Valid && userRole == "user" || userRole == "admin" {
 		return nil
 	}
-	return errors.New("invalid author token provided")
+	return errors.NewBadRequestError("invalid author token provided")
+}
+
+func JWTUserId(context *gin.Context) (int64, *errors.RestErr) {
+	token, err := getToken(context)
+	if err != nil {
+		return 0, errors.NewBadRequestError("invalid token provided")
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	userId := int64(claims["id"].(float64))
+	if ok && token.Valid {
+		return userId, nil
+	}
+	return 0, errors.NewBadRequestError("Only registered Customers are allowed to perform this action")
 }

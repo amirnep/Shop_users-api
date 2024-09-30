@@ -26,7 +26,7 @@ type usersControllerInterface interface {
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
 	Login(c *gin.Context)
-	//CurrentUser(c *gin.Context)
+	GetProfile(c *gin.Context)
 }
 
 type LoginInput struct {
@@ -74,13 +74,13 @@ func (u *usersController) Get(c *gin.Context) {
 }
 
 func (u *usersController) Update(c *gin.Context) {
-	userId, idErr := UsersController.getUserId(c.Param("user_id"))
+	userId, idErr := jwt.JWTUserId(c)
 	if idErr != nil {
 		c.JSON(idErr.Status, idErr)
 		return
 	}
 
-	var user users.User
+	var user users.Profile
 	if err := c.ShouldBindJSON(&user); err != nil {
 		restErr := errors.NewBadRequestError("invalid json body")
 		c.JSON(restErr.Status, restErr)
@@ -142,4 +142,18 @@ func (u *usersController) Login(c *gin.Context){
 	}
 
 	c.JSON(http.StatusOK, gin.H{"user_id": result.Id, "token_type": "Bearer", "expires_in": tokenTTL,"access_token": token})
+}
+
+func (u *usersController) GetProfile(c *gin.Context) {
+	userId, idErr := jwt.JWTUserId(c)
+	if idErr != nil {
+		c.JSON(idErr.Status, userId)
+		return
+	}
+	result, getErr := services.UsersService.GetUser(userId)
+	if getErr != nil {
+		c.JSON(getErr.Status, getErr)
+		return
+	}
+	c.JSON(http.StatusOK, result.Marshall(c.GetHeader("X-Public") == "true"))
 }

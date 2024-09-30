@@ -11,14 +11,20 @@ type User struct {
 	Id              int64  `json:"id"`
 	FirstName       string `json:"first_name"`
 	LastName        string `json:"last_name"`
-	Email           string `json:"email"`
+	Email           string `json:"email" binding:"required"`
 	Role            string `json:"role"`
 	DateCreated 	string `json:"date_created"`
-	Password        string `json:"password"`
-	ConfirmPassword string `json:"confirm_password"`
+	Password        string `json:"password" binding:"required"`
+	ConfirmPassword string `json:"confirm_password" binding:"required"`
 }
 
 type Users []User
+
+type Profile struct {
+	Id              int64  `json:"id"`
+	FirstName       string `json:"first_name"`
+	LastName        string `json:"last_name"`
+}
 
 func (user *User) Validate() *errors.RestErr {
 	user.FirstName = strings.TrimSpace(user.FirstName)
