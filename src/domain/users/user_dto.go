@@ -20,6 +20,11 @@ type User struct {
 
 type Users []User
 
+type LoginInput struct {
+	Email 			string `json:"email" binding:"required"`
+	Password 		string `json:"password" binding:"required"`
+}
+
 type Profile struct {
 	Id              int64  `json:"id"`
 	FirstName       string `json:"first_name"`

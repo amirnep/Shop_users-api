@@ -16,6 +16,8 @@ const (
 	queryDeleteUser = "DELETE FROM users WHERE id = ?;"
 
 	queryGetLoginInfo = "SELECT id, email, role, password FROM users WHERE email = ?;"
+
+	queryGetUsers = "SELECT id, first_name, last_name, email, role, date_created FROM users;"
 )
 
 func (user *User) Get() *errors.RestErr {
@@ -28,7 +30,7 @@ func (user *User) Get() *errors.RestErr {
 
 	result := stmt.QueryRow(user.Id)
 	if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Role, &user.DateCreated); getErr != nil {
-		logger.Error("error when trying to get user by id", err)
+		logger.Error("error when trying to get user by id", getErr)
 		return errors.NewInternalServerError("database error")
 	}
 	return nil
@@ -44,13 +46,13 @@ func (user *User) Save() *errors.RestErr {
 
 	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.Password, user.ConfirmPassword)
 	if saveErr != nil {
-		logger.Error("error when trying to save user", err)
+		logger.Error("error when trying to save user", saveErr)
 		return errors.NewInternalServerError("database error")
 	}
 
-	userId, err := insertResult.LastInsertId()
-	if err != nil {
-		logger.Error("error when trying to get last insert id after creating a new user", err)
+	userId, insertErr := insertResult.LastInsertId()
+	if insertErr != nil {
+		logger.Error("error when trying to get last insert id after creating a new user", insertErr)
 		return errors.NewInternalServerError("database error")
 	}
 
@@ -66,9 +68,9 @@ func (user *User) Update() *errors.RestErr {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(user.FirstName, user.LastName, user.Id)
-	if err != nil {
-		logger.Error("error when trying to update user", err)
+	_, updateErr := stmt.Exec(user.FirstName, user.LastName, user.Id)
+	if updateErr != nil {
+		logger.Error("error when trying to update user", updateErr)
 		return errors.NewInternalServerError("database error")
 	}
 	return nil
@@ -82,8 +84,8 @@ func (user *User) Delete() *errors.RestErr {
 	}
 	defer stmt.Close()
 
-	if _, err = stmt.Exec(user.Id); err != nil {
-		logger.Error("error when trying to delete user", err)
+	if _, deleteErr := stmt.Exec(user.Id); deleteErr != nil {
+		logger.Error("error when trying to delete user", deleteErr)
 		return errors.NewInternalServerError("database error")
 	}
 		
@@ -100,8 +102,39 @@ func (user *User) Login() *errors.RestErr {
 
 	result := stmt.QueryRow(user.Email)
 	if getErr := result.Scan(&user.Id, &user.Email, &user.Role, &user.Password); getErr != nil {
-		logger.Error("error when trying to get user by email", err)
+		logger.Error("error when trying to get user by email", getErr)
 		return errors.NewInternalServerError("database error")
 	}
 	return nil
+}
+
+func (user *User) GetAll() ([]User ,*errors.RestErr) {
+	stmt, err := users_db.Client.Prepare(queryGetUsers)
+	if err != nil {
+		logger.Error("error when trying to get users statement", err)
+		return nil, errors.NewInternalServerError("database error")
+	}
+	defer stmt.Close()
+
+	result, queryErr := stmt.Query()
+	if queryErr != nil {
+		return nil, errors.NewInternalServerError("query error")
+	}
+
+	var users []User
+	
+	for result.Next() {
+		if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Role, &user.DateCreated); getErr != nil {
+			logger.Error("error when trying to get users.", getErr)
+			return users , errors.NewInternalServerError("database error")
+		}
+
+		users = append(users, *user)
+	}
+
+	if resultErr := result.Err(); resultErr != nil {
+		return nil, errors.NewInternalServerError(resultErr.Error())
+	}
+
+	return users, nil
 }

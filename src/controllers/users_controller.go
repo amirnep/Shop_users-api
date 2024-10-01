@@ -1,4 +1,4 @@
-package users
+package controllers
 
 import (
 	"net/http"
@@ -21,6 +21,7 @@ type usersController struct {}
 
 type usersControllerInterface interface {
 	getUserId(string) (int64, *errors.RestErr)
+	GetUsers(c *gin.Context)
 	Create(c *gin.Context)
 	Get(c *gin.Context)
 	Update(c *gin.Context)
@@ -29,17 +30,21 @@ type usersControllerInterface interface {
 	GetProfile(c *gin.Context)
 }
 
-type LoginInput struct {
-	Email string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 func (u *usersController) getUserId(userIdParam string) (int64, *errors.RestErr) {
 	userId, userErr := strconv.ParseInt(userIdParam, 10, 64)
 	if userErr != nil {
 		return 0, errors.NewBadRequestError("user id should be a number")
 	}
 	return userId, nil
+}
+
+func (u *usersController) GetUsers(c *gin.Context) {
+	result, getErr := services.UsersService.GetAll()
+	if getErr != nil {
+		c.JSON(getErr.Status, getErr)
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func (u *usersController) Create(c *gin.Context) {
@@ -114,7 +119,7 @@ func (u *usersController) Delete(c *gin.Context) {
 }
 
 func (u *usersController) Login(c *gin.Context){
-	var input LoginInput
+	input := users.LoginInput{}
 	tokenTTL, _ := strconv.Atoi(os.Getenv("TOKEN_TTL"))
 
 	if inputErr := c.ShouldBindJSON(&input); inputErr != nil {

@@ -16,6 +16,7 @@ type usersService struct{}
 
 type usersServiceInterface interface {
 	GetUser(int64) (*users.User, *errors.RestErr)
+	GetAll() ([]users.User, *errors.RestErr)
 	CreateUser(users.User)(*users.User,*errors.RestErr)
 	UpdateUser(bool, users.Profile) (*users.User, *errors.RestErr)
 	DeleteUser(int64) *errors.RestErr
@@ -29,6 +30,14 @@ func (s *usersService) GetUser(userId int64) (*users.User, *errors.RestErr) {
 		return nil, err
 	}
 	return dao, nil
+}
+
+func (s *usersService) GetAll() ([]users.User, *errors.RestErr) {
+	dao := &users.User{}
+	res, err := dao.GetAll(); if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (s *usersService) CreateUser(user users.User) (*users.User, *errors.RestErr) {
