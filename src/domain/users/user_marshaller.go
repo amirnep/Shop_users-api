@@ -1,6 +1,8 @@
 package users
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type PublicUser struct {
 	Id          int64  `json:"id"`
@@ -15,6 +17,7 @@ type PrivateUser struct {
 	Email       string `json:"email"`
 	Role 		string `json:"role"`
 	DateCreated string `json:"date_created"`
+	ImageUrl	string `json:"image_url"`
 }
 
 func (users Users) Marshall(isPublic bool) []interface {} {

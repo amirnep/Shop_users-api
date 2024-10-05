@@ -31,8 +31,9 @@ func ValidateJWT(context *gin.Context) *errors.RestErr {
 	if err != nil {
 		return errors.NewBadRequestError("invalid token provided")
 	}
-	_, ok := token.Claims.(jwt.MapClaims)
-	if ok && token.Valid {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	expire := claims["eat"].(float64)
+	if ok && token.Valid && time.Unix(int64(expire), 0).After(time.Now()) {
 		return nil
 	}
 	return errors.NewBadRequestError("invalid token provided")
@@ -40,6 +41,7 @@ func ValidateJWT(context *gin.Context) *errors.RestErr {
 
 func getToken(context *gin.Context) (*jwt.Token, error) {
 	tokenString := getTokenFromRequest(context)
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

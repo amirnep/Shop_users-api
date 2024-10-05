@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/amirnep/shop/src/domain/users"
@@ -11,6 +12,7 @@ import (
 	crypto_utils "github.com/amirnep/shop/src/utils/cypto_utils"
 	"github.com/amirnep/shop/src/utils/errors"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 var (
@@ -28,6 +30,8 @@ type usersControllerInterface interface {
 	Delete(c *gin.Context)
 	Login(c *gin.Context)
 	GetProfile(c *gin.Context)
+	UpdateRole(c *gin.Context)
+	ChangePassword(c *gin.Context)
 }
 
 func (u *usersController) getUserId(userIdParam string) (int64, *errors.RestErr) {
@@ -48,12 +52,31 @@ func (u *usersController) GetUsers(c *gin.Context) {
 }
 
 func (u *usersController) Create(c *gin.Context) {
-	var user users.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var user *users.User
+	if err := c.ShouldBind(&user); err != nil {
 		restErr := *errors.NewBadRequestError("invalid json body")
 		c.JSON(restErr.Status, restErr)
 		return
 	}
+
+	file := c.Request.MultipartForm.File["Image"][0]
+
+	if file.Size > 3<<20 {
+		restErr := *errors.NewBadRequestError("image size must less then 3mb")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	uniqueId := uuid.New().String()
+	dst := "wwwroot/" + filepath.Base(uniqueId + ".jpg")
+
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		restErr := *errors.NewBadRequestError("error in uploading and saving file")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	user.ImageUrl = "src/wwwroot/" + uniqueId + ".jpg"
 
 	result, saveErr := services.UsersService.CreateUser(user)
 	if saveErr != nil {
@@ -85,14 +108,33 @@ func (u *usersController) Update(c *gin.Context) {
 		return
 	}
 
-	var user users.Profile
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var user users.User
+
+	if err := c.ShouldBind(&user); err != nil {
 		restErr := errors.NewBadRequestError("invalid json body")
 		c.JSON(restErr.Status, restErr)
 		return
 	}
 
+	file := c.Request.MultipartForm.File["Image"][0]
+
+	if file.Size > 3<<20 {
+		restErr := *errors.NewBadRequestError("image size must less then 3mb")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	uniqueId := uuid.New().String()
+	dst := "wwwroot/" + filepath.Base(uniqueId + ".jpg")
+
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		restErr := *errors.NewBadRequestError("error in uploading and saving file")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
 	user.Id = userId
+	user.ImageUrl = "src/wwwroot/" + uniqueId + ".jpg"
 
 	isPartial := c.Request.Method == http.MethodPatch
 
@@ -161,4 +203,44 @@ func (u *usersController) GetProfile(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, result.Marshall(c.GetHeader("X-Public") == "true"))
+}
+
+func (u *usersController) UpdateRole(c *gin.Context) {
+	userId, idErr := UsersController.getUserId(c.Param("user_id"))
+	if idErr != nil {
+		c.JSON(idErr.Status, idErr)
+		return
+	}
+
+	result := services.UsersService.EditRole(userId)
+	if result != nil {
+		c.JSON(http.StatusBadRequest, result)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Role edited to Admin successfully"})
+}
+
+func (u *usersController) ChangePassword(c *gin.Context) {
+	userId, idErr := jwt.JWTUserId(c)
+	if idErr != nil {
+		c.JSON(idErr.Status, userId)
+		return
+	}
+
+	var user *users.Password
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		restErr := errors.NewBadRequestError("invalid json body")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	user.Id = userId
+
+	result := services.UsersService.EditPassword(userId, user)
+	if result != nil {
+		c.JSON(result.Status, result)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "password changed successfully"})
 }

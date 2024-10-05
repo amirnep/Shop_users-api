@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/amirnep/shop/src/controllers"
@@ -33,6 +32,7 @@ func TestRegister(t *testing.T) {
 
     jsonValue, _ := json.Marshal(user)
     req, _ := http.NewRequest("POST", "/Register", bytes.NewBuffer(jsonValue))
+    req.Header.Set("Content-Type", "multipart/form-data")
 
     w := httptest.NewRecorder()
     r.ServeHTTP(w, req)
@@ -53,17 +53,18 @@ func TestLogin(t *testing.T) {
 
     w := httptest.NewRecorder()
     r.ServeHTTP(w, req)
-    //auth := "Bearer " + w.Body.String()[17:174]
     assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestGetProfile(t *testing.T) {
     r := SetUpRouter()
+    r.Use(middlewares.JWTAuthCustomerMiddleware())
     r.GET("/api/GetProfile", controllers.UsersController.GetProfile)
 
     req, _ := http.NewRequest("GET", "/api/GetProfile", nil)
-    req.Header.Set("Authorization" , "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3Mjc4OTMzNzcsImlhdCI6MTcyNzgwNjk3NywiaWQiOjIyLCJyb2xlIjoidXNlciJ9.WxXhR0xzWSiHdxwsJq6xPpDbJOR1ih9Tskqr6pa8G20")
-   
+    req.Header.Set("Authorization" , "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3MjgyNDEyNjEsImlhdCI6MTcyODE1NDg2MSwiaWQiOjIxLCJyb2xlIjoiYWRtaW4ifQ.UGPP5Hh0R4c6QvUuPMZ2d6pcRw-yGjaZfxkNDQ2O1us")
+    req.Header.Set("X-Public", "true")
+
     w := httptest.NewRecorder()
     r.ServeHTTP(w, req)
 
@@ -79,9 +80,10 @@ func TestGetUser(t *testing.T) {
     r.Use(middlewares.JWTAuthMiddleware())
     r.GET("/api/admin/GetUser/:user_id", controllers.UsersController.Get)
 
-    req, _ := http.NewRequest("GET", "/api/admin/GetUser/11", nil)
-    req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3Mjc4OTM5ODcsImlhdCI6MTcyNzgwNzU4NywiaWQiOjIxLCJyb2xlIjoiYWRtaW4ifQ.hjcP6rPaYpsC7w3yGV_nyup1c-0PUgzFX1RMrvuxKVI")
-    
+    req, _ := http.NewRequest("GET", "/api/admin/GetUser/14", nil)
+    req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3MjgyNDEyNjEsImlhdCI6MTcyODE1NDg2MSwiaWQiOjIxLCJyb2xlIjoiYWRtaW4ifQ.UGPP5Hh0R4c6QvUuPMZ2d6pcRw-yGjaZfxkNDQ2O1us")
+    req.Header.Set("X-Public", "true")
+
     w := httptest.NewRecorder()
     r.ServeHTTP(w, req)
 
@@ -97,8 +99,8 @@ func TestDeleteUser(t *testing.T) {
     r.Use(middlewares.JWTAuthMiddleware())
     r.DELETE("/api/admin/DeleteUser/:user_id", controllers.UsersController.Delete)
 
-    req, _ := http.NewRequest("DELETE", "/api/admin/DeleteUser/11", nil)
-    req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3Mjc4OTM5ODcsImlhdCI6MTcyNzgwNzU4NywiaWQiOjIxLCJyb2xlIjoiYWRtaW4ifQ.hjcP6rPaYpsC7w3yGV_nyup1c-0PUgzFX1RMrvuxKVI")
+    req, _ := http.NewRequest("DELETE", "/api/admin/DeleteUser/13", nil)
+    req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3MjgyNDEyNjEsImlhdCI6MTcyODE1NDg2MSwiaWQiOjIxLCJyb2xlIjoiYWRtaW4ifQ.UGPP5Hh0R4c6QvUuPMZ2d6pcRw-yGjaZfxkNDQ2O1us")
 
     w := httptest.NewRecorder()
     r.ServeHTTP(w, req)
@@ -113,7 +115,7 @@ func TestGetUsers(t *testing.T) {
     r.GET("/api/admin/GetUsers", controllers.UsersController.GetUsers)
 
     req, _ := http.NewRequest("GET", "/api/admin/GetUsers", nil)
-    req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3Mjc4OTM5ODcsImlhdCI6MTcyNzgwNzU4NywiaWQiOjIxLCJyb2xlIjoiYWRtaW4ifQ.hjcP6rPaYpsC7w3yGV_nyup1c-0PUgzFX1RMrvuxKVI")
+    req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3MjgyNDEyNjEsImlhdCI6MTcyODE1NDg2MSwiaWQiOjIxLCJyb2xlIjoiYWRtaW4ifQ.UGPP5Hh0R4c6QvUuPMZ2d6pcRw-yGjaZfxkNDQ2O1us")
     
     w := httptest.NewRecorder()
     r.ServeHTTP(w, req)
@@ -123,4 +125,38 @@ func TestGetUsers(t *testing.T) {
 
     assert.Equal(t, http.StatusOK, w.Code)
     assert.NotEmpty(t, w.Body.String())
+}
+
+func TestUpdateRole(t *testing.T) {
+    r := SetUpRouter()
+    r.Use(middlewares.JWTAuthMiddleware())
+    r.PUT("api/admin/EditRole/:user_id", controllers.UsersController.UpdateRole)
+
+    req, _ := http.NewRequest("PUT", "/api/admin/EditRole/28", nil)
+    req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3MjgyNDEyNjEsImlhdCI6MTcyODE1NDg2MSwiaWQiOjIxLCJyb2xlIjoiYWRtaW4ifQ.UGPP5Hh0R4c6QvUuPMZ2d6pcRw-yGjaZfxkNDQ2O1us")
+    
+    w := httptest.NewRecorder()
+    r.ServeHTTP(w, req)
+
+    assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestChangePassword(t *testing.T) {
+    r := SetUpRouter()
+    r.Use(middlewares.JWTAuthCustomerMiddleware())
+    r.PUT("api/ChangePassword", controllers.UsersController.ChangePassword)
+
+    user := users.Password{
+        Password : "T@1est12459",
+        ConfirmPassword: "T@1est12459",
+    }
+
+    jsonValue, _ := json.Marshal(user)
+    req, _ := http.NewRequest("PUT", "/api/ChangePassword", bytes.NewBuffer(jsonValue))
+    req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYXQiOjE3MjgyNDEyNjEsImlhdCI6MTcyODE1NDg2MSwiaWQiOjIxLCJyb2xlIjoiYWRtaW4ifQ.UGPP5Hh0R4c6QvUuPMZ2d6pcRw-yGjaZfxkNDQ2O1us")
+    
+    w := httptest.NewRecorder()
+    r.ServeHTTP(w, req)
+
+    assert.Equal(t, http.StatusOK, w.Code)
 }

@@ -2,7 +2,11 @@ package validation
 
 import (
 	"regexp"
+	"strings"
 	"unicode"
+
+	"github.com/amirnep/shop/src/domain/users"
+	"github.com/amirnep/shop/src/utils/errors"
 )
 
 func EmailValidation(email string) bool {
@@ -34,4 +38,49 @@ func PasswordValidation(password string) bool {
         }
     }
     return hasMinLen && hasUpper && hasLower && hasNumber && hasSpecial
+}
+
+func Validate(user *users.User) *errors.RestErr {
+	user.FirstName = strings.TrimSpace(user.FirstName)
+	user.LastName = strings.TrimSpace(user.LastName)
+
+	
+	user.Email = strings.TrimSpace(strings.ToLower(user.Email))
+	if user.Email == "" || !EmailValidation(user.Email){
+		return errors.NewBadRequestError("invalid email address.")
+	}
+
+	user.Password = strings.TrimSpace(user.Password)
+	if user.Password == "" || !PasswordValidation(user.Password){
+		return errors.NewBadRequestError("Password must have upperLetter, lowerLetter, number, specialChar, and longer than 8.")
+	}
+
+	user.ConfirmPassword = strings.TrimSpace(user.ConfirmPassword)
+	if user.ConfirmPassword == ""{
+		return errors.NewBadRequestError("invalid confirm password.")
+	}
+
+	if user.Password != user.ConfirmPassword {
+		return errors.NewBadRequestError("passwords does not match.")
+	}
+
+	return nil
+}
+
+func ChangePasswordValidation(password *users.Password) *errors.RestErr {
+	password.Password = strings.TrimSpace(password.Password)
+	if password.Password == "" || !PasswordValidation(password.Password){
+		return errors.NewBadRequestError("Password must have upperLetter, lowerLetter, number, specialChar, and longer than 8.")
+	}
+
+	password.ConfirmPassword = strings.TrimSpace(password.ConfirmPassword)
+	if password.ConfirmPassword == ""{
+		return errors.NewBadRequestError("invalid confirm password.")
+	}
+
+	if password.Password != password.ConfirmPassword {
+		return errors.NewBadRequestError("passwords does not match.")
+	}
+
+	return nil
 }

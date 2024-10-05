@@ -7,17 +7,21 @@ import (
 )
 
 const (
-	queryInsertUser = "INSERT INTO users(first_name, last_name, email, password, confirm_password) VALUES (?,?,?,?,?);"
+	queryInsertUser = "INSERT INTO users(first_name, last_name, email, password, confirm_password, image_url) VALUES (?,?,?,?,?,?);"
 
-	queryGetUser = "SELECT id, first_name, last_name, email, role, date_created FROM users WHERE id = ?;"
+	queryGetUser = "SELECT id, first_name, last_name, email, role, date_created, image_url FROM users WHERE id = ?;"
 
-	queryUpdateUser = "UPDATE users SET first_name=?, last_name=? WHERE id = ?;"
+	queryUpdateUser = "UPDATE users SET first_name=?, last_name=?, image_url=? WHERE id = ?;"
 
 	queryDeleteUser = "DELETE FROM users WHERE id = ?;"
 
 	queryGetLoginInfo = "SELECT id, email, role, password FROM users WHERE email = ?;"
 
-	queryGetUsers = "SELECT id, first_name, last_name, email, role, date_created FROM users;"
+	queryGetUsers = "SELECT id, first_name, last_name, email, role, date_created, image_url FROM users;"
+
+	queryEditRole = "UPDATE users SET role=? WHERE id = ?;"
+
+	queryEditPassword = "UPDATE users SET password=?, confirm_password=? WHERE id = ?;"
 )
 
 func (user *User) Get() *errors.RestErr {
@@ -29,7 +33,7 @@ func (user *User) Get() *errors.RestErr {
 	defer stmt.Close()
 
 	result := stmt.QueryRow(user.Id)
-	if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Role, &user.DateCreated); getErr != nil {
+	if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Role, &user.DateCreated, &user.ImageUrl); getErr != nil {
 		logger.Error("error when trying to get user by id", getErr)
 		return errors.NewInternalServerError("database error")
 	}
@@ -44,7 +48,7 @@ func (user *User) Save() *errors.RestErr {
 	}
 	defer stmt.Close()
 
-	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.Password, user.ConfirmPassword)
+	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.Password, user.ConfirmPassword, user.ImageUrl)
 	if saveErr != nil {
 		logger.Error("error when trying to save user", saveErr)
 		return errors.NewInternalServerError("database error")
@@ -68,7 +72,7 @@ func (user *User) Update() *errors.RestErr {
 	}
 	defer stmt.Close()
 
-	_, updateErr := stmt.Exec(user.FirstName, user.LastName, user.Id)
+	_, updateErr := stmt.Exec(user.FirstName, user.LastName, user.ImageUrl, user.Id)
 	if updateErr != nil {
 		logger.Error("error when trying to update user", updateErr)
 		return errors.NewInternalServerError("database error")
@@ -124,7 +128,7 @@ func (user *User) GetAll() ([]User ,*errors.RestErr) {
 	var users []User
 	
 	for result.Next() {
-		if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Role, &user.DateCreated); getErr != nil {
+		if getErr := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.Email, &user.Role, &user.DateCreated, &user.ImageUrl); getErr != nil {
 			logger.Error("error when trying to get users.", getErr)
 			return users , errors.NewInternalServerError("database error")
 		}
@@ -137,4 +141,36 @@ func (user *User) GetAll() ([]User ,*errors.RestErr) {
 	}
 
 	return users, nil
+}
+
+func (user *User) EditRole() (*errors.RestErr) {
+	stmt, err := users_db.Client.Prepare(queryEditRole)
+	if err != nil {
+		logger.Error("error when trying to prepare update user statement", err)
+		return errors.NewInternalServerError("database error")
+	}
+	defer stmt.Close()
+
+	_, updateErr := stmt.Exec(user.Role, user.Id)
+	if updateErr != nil {
+		logger.Error("error when trying to update user role", updateErr)
+		return errors.NewInternalServerError("database error")
+	}
+	return nil
+}
+
+func (user *User) EditPassword() (*errors.RestErr) {
+	stmt, err := users_db.Client.Prepare(queryEditPassword)
+	if err != nil {
+		logger.Error("error when trying to prepare update user statement", err)
+		return errors.NewInternalServerError("database error")
+	}
+	defer stmt.Close()
+
+	_, updateErr := stmt.Exec(user.Password, user.ConfirmPassword, user.Id)
+	if updateErr != nil {
+		logger.Error("error when trying to update user role", updateErr)
+		return errors.NewInternalServerError("database error")
+	}
+	return nil
 }

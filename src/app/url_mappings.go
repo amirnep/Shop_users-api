@@ -15,6 +15,7 @@ func mapUrls() {
 	protected.GET("/GetProfile", controllers.UsersController.GetProfile)
 	protected.PUT("/EditProfile", controllers.UsersController.Update)
 	protected.PATCH("/EditProfile", controllers.UsersController.Update)
+	protected.PUT("/ChangePassword", controllers.UsersController.ChangePassword)
 
 
 	admin := router.Group("/api/admin")
@@ -23,4 +24,5 @@ func mapUrls() {
 	admin.GET("/GetUsers", controllers.UsersController.GetUsers)
 	admin.GET("/GetUser/:user_id", controllers.UsersController.Get)
 	admin.DELETE("/DeleteUser/:user_id", controllers.UsersController.Delete)
+	admin.PUT("/EditRole/:user_id", controllers.UsersController.UpdateRole)
 }
