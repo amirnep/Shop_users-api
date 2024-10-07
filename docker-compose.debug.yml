@@ -1,0 +1,10 @@
+version: "3.4"
+
+services:
+  shop:
+    image: shop
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 3000:3000
